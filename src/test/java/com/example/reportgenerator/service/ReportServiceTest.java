@@ -9,17 +9,20 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.test.util.ReflectionTestUtils;
 
-import java.io.FileNotFoundException;
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
+public class ReportServiceTest {
 
-class ReportServiceTest {
+    @InjectMocks
+    private ReportService reportService;
 
     @Mock
     private FileProcessorService fileProcessorService;
@@ -27,65 +30,128 @@ class ReportServiceTest {
     @Mock
     private CsvUtil csvUtil;
 
-    @InjectMocks
-    private ReportService reportService;
-
     @BeforeEach
-    void setUp() {
+    public void setup() {
         MockitoAnnotations.openMocks(this);
     }
 
     @Test
-    void testGenerateReport() {
-        List<InputData> inputDataList = List.of(new InputData());
-        Map<String, ReferenceData> referenceDataMap = Map.of("EMP001|DEP01", new ReferenceData());
+    public void testGenerateReport() throws Exception {
+        // Setup
+        String testOutputPath = "/test/output/path.csv";
+        ReflectionTestUtils.setField(reportService, "outputFilePath", testOutputPath);
 
-        try {
-            when(fileProcessorService.processInputFile()).thenReturn(inputDataList);
-            when(fileProcessorService.processReferenceFile()).thenReturn(referenceDataMap);
+        InputData inputData = new InputData();
+        inputData.setField1("field1");
+        inputData.setField2("field2");
+        inputData.setField5(5.0);
+        inputData.setRefKey1("EMP001");
+        inputData.setRefKey2("DEPT001");
 
-            doNothing().when(csvUtil).writeOutputToCsv(anyList(), anyString());
+        List<InputData> inputDataList = Arrays.asList(inputData);
 
-            reportService.generateReport();
+        ReferenceData refData = new ReferenceData();
+        refData.setRefKey1("EMP001");
+        refData.setRefData1("IT Department");
+        refData.setRefKey2("DEPT001");
+        refData.setRefData2("Information Technology");
+        refData.setRefData3("Level 3");
+        refData.setRefData4(100000.0);
 
-            verify(fileProcessorService, times(1)).processInputFile();
-            verify(fileProcessorService, times(1)).processReferenceFile();
-            verify(csvUtil, times(1)).writeOutputToCsv(anyList(), anyString());
-        } catch (FileNotFoundException e) {
-            fail("File not found: " + e.getMessage());
-        } catch (Exception e) {
-            fail("Unexpected error: " + e.getMessage());
-        }
+        Map<String, ReferenceData> referenceDataMap = new HashMap<>();
+        referenceDataMap.put("EMP001|DEPT001", refData);
+
+        when(fileProcessorService.processInputFile()).thenReturn(inputDataList);
+        when(fileProcessorService.processReferenceFile()).thenReturn(referenceDataMap);
+
+        // Execute
+        reportService.generateReport();
+
+        // Verify
+        verify(fileProcessorService).processInputFile();
+        verify(fileProcessorService).processReferenceFile();
+        verify(csvUtil).writeOutputToCsv(anyList(), eq(testOutputPath));
     }
 
     @Test
-    void testTransformData() {
-        InputData inputData = new InputData();
-        inputData.setField1("John");
-        inputData.setField2("Doe");
-        inputData.setField3("Engineer");
-        inputData.setField4("Active");
-        inputData.setField5(75000.5);
-        inputData.setRefKey1("EMP001");
-        inputData.setRefKey2("DEP01");
+    public void testTransformData() {
+        // Setup
+        InputData input = new InputData();
+        input.setField1("field1");
+        input.setField2("field2");
+        input.setField5(5.0);
+        input.setRefKey1("EMP001");
+        input.setRefKey2("DEPT001");
 
-        ReferenceData referenceData = new ReferenceData();
-        referenceData.setRefKey1("EMP001");
-        referenceData.setRefData1("IT");
-        referenceData.setRefKey2("DEP01");
-        referenceData.setRefData2("Technology");
-        referenceData.setRefData3("Level 3");
-        referenceData.setRefData4(50000.0);
+        ReferenceData refData = new ReferenceData();
+        refData.setRefKey1("EMP001");
+        refData.setRefData1("IT Department");
+        refData.setRefKey2("DEPT001");
+        refData.setRefData2("Information Technology");
+        refData.setRefData3("Level 3");
+        refData.setRefData4(10.0);
 
-        Map<String, ReferenceData> referenceDataMap = Map.of("EMP001|DEP01", referenceData);
+        Map<String, ReferenceData> referenceDataMap = new HashMap<>();
+        referenceDataMap.put("EMP001|DEPT001", refData);
 
-        OutputData result = reportService.transformData(inputData, referenceDataMap);
+        // Execute
+        OutputData result = reportService.transformData(input, referenceDataMap);
 
-        assertNotNull(result);
-        assertEquals("JohnDoe", result.getOutField1());
-        assertEquals("IT", result.getOutField2());
-        assertEquals("TechnologyLevel 3", result.getOutField3());
-        assertEquals(75000.5 * Math.max(75000.5, 50000.0), result.getOutField4());
-        assertEquals(75000.5, result.getOutField5());
+        // Verify
+        assertEquals("field1field2", result.getOutField1());
+        assertEquals("IT Department", result.getOutField2());
+        assertEquals("Information TechnologyLevel 3", result.getOutField3());
+        assertEquals(50.0, result.getOutField4());
+        assertEquals(10.0, result.getOutField5());
+    }
+
+    @Test
+    public void testTransformDataWithNullValues() {
+        // Setup
+        InputData input = new InputData();
+        input.setField1("field1");
+        input.setField2("field2");
+        input.setField5(null);
+        input.setRefKey1("EMP001");
+        input.setRefKey2("DEPT001");
+
+        ReferenceData refData = new ReferenceData();
+        refData.setRefKey1("EMP001");
+        refData.setRefData1("IT Department");
+        refData.setRefKey2("DEPT001");
+        refData.setRefData2("Information Technology");
+        refData.setRefData3("Level 3");
+        refData.setRefData4(null);
+
+        Map<String, ReferenceData> referenceDataMap = new HashMap<>();
+        referenceDataMap.put("EMP001|DEPT001", refData);
+
+        // Execute
+        OutputData result = reportService.transformData(input, referenceDataMap);
+
+        // Verify
+        assertEquals("field1field2", result.getOutField1());
+        assertEquals("IT Department", result.getOutField2());
+        assertEquals("Information TechnologyLevel 3", result.getOutField3());
+        assertEquals(0.0, result.getOutField4());
+        assertEquals(0.0, result.getOutField5());
+    }
+
+    @Test
+    public void testTransformDataWithMissingReferenceData() {
+        // Setup
+        InputData input = new InputData();
+        input.setField1("field1");
+        input.setField2("field2");
+        input.setField5(5.0);
+        input.setRefKey1("EMP001");
+        input.setRefKey2("DEPT001");
+
+        Map<String, ReferenceData> referenceDataMap = new HashMap<>();
+
+        // Execute & Verify
+        assertThrows(IllegalArgumentException.class, () -> {
+            reportService.transformData(input, referenceDataMap);
+        });
     }
 }
