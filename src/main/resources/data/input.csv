@@ -1,0 +1,11 @@
+field1,field2,field3,field4,field5,refkey1,refkey2
+John,Doe,Engineer,Active,75000.50,EMP001,DEP01
+Jane,Smith,Manager,Active,95000.75,EMP002,DEP02
+Mike,Johnson,Analyst,Inactive,65000.25,EMP003,DEP01
+Sarah,Williams,Developer,Active,80000.00,EMP004,DEP03
+Robert,Brown,Designer,Active,70000.50,EMP005,DEP02
+Emily,Davis,Tester,Active,72000.25,EMP006,DEP03
+David,Miller,Architect,Inactive,90000.00,EMP007,DEP01
+Lisa,Wilson,Manager,Active,98000.50,EMP008,DEP02
+Michael,Taylor,Developer,Active,82000.75,EMP009,DEP03
+Jennifer,Anderson,Analyst,Active,68000.25,EMP010,DEP01

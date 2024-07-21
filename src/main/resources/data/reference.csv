@@ -1,0 +1,11 @@
+refkey1,refdata1,refkey2,refdata2,refdata3,refdata4
+EMP001,IT,DEP01,Technology,Level 3,5000.00
+EMP002,HR,DEP02,Human Resources,Level 5,8000.00
+EMP003,IT,DEP01,Technology,Level 2,4000.00
+EMP004,IT,DEP03,Development,Level 4,6000.00
+EMP005,Design,DEP02,Human Resources,Level 3,5000.00
+EMP006,IT,DEP03,Development,Level 3,5000.00
+EMP007,IT,DEP01,Technology,Level 5,8000.00
+EMP008,HR,DEP02,Human Resources,Level 5,8000.00
+EMP009,IT,DEP03,Development,Level 4,6000.00
+EMP010,IT,DEP01,Technology,Level 2,4000.00
